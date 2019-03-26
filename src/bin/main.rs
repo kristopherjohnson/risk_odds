@@ -2,10 +2,20 @@ extern crate risk_odds;
 
 use risk_odds::{percentage, Attack, Die, Score};
 
-fn main() {
-    let mut die = Die::new();
+use std::env;
 
-    let attack_count = 100_000_000;
+fn main() {
+    let mut attack_count = 100_000_000;
+
+    let args: Vec<String> = env::args().collect();
+    if args.len() == 2 {
+        attack_count = args[1].parse().unwrap();
+    } else if args.len() != 1 {
+        eprintln!("usage: {} [COUNT]", args[0]);
+        return;
+    }
+
+    let mut die = Die::new();
 
     let mut wins = 0;
     let mut losses = 0;
@@ -19,13 +29,17 @@ fn main() {
         }
     }
 
+    let total = wins + losses + ties;
+
     println!(
-        "Wins\t{}\t{:.2}%\nLosses\t{}\t{:.2}%\nTies\t{}\t{:.2}%",
+        "Wins   {:12} {:6.2}%\nLosses {:12} {:6.2}%\nTies   {:12} {:6.2}%\nTotal  {:12} {:6.2}%",
         wins,
         percentage(wins, attack_count),
         losses,
         percentage(losses, attack_count),
         ties,
-        percentage(ties, attack_count)
+        percentage(ties, attack_count),
+        total,
+        percentage(total, attack_count)
     );
 }
