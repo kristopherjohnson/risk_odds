@@ -1,22 +1,48 @@
 extern crate risk_odds;
 
 use risk_odds::{percentage, Attack, Die, Score};
-use std::env;
 
+use std::env;
+use std::thread;
+
+/// Program entry point
+///
+/// Takes two optional command-line parameters:
+///
+/// - number of attack rolls to simulate (default 100 million)
+/// - number of threads (default 1)
 fn main() {
     let mut attack_count = 100_000_000;
+    let mut thread_count = 1;
 
+    // Read command-line arguments
     let args: Vec<String> = env::args().collect();
-    if args.len() == 2 {
+    if args.len() >= 2 {
         attack_count = args[1].parse().unwrap();
-    } else if args.len() != 1 {
-        eprintln!("usage: {} [COUNT]", args[0]);
-        return;
+    }
+    if args.len() >= 3 {
+        thread_count = args[2].parse().unwrap();
     }
 
-    let (wins, losses, ties) = simulate_attacks(attack_count);
+    // Spawn threads
+    let mut threads = Vec::new();
+    for _ in 0..thread_count {
+        let count = attack_count;
+        threads.push(thread::spawn(move || simulate_attacks(count)));
+    }
 
-    report_results(wins, losses, ties);
+    // Gather thread results
+    let mut total_wins = 0;
+    let mut total_losses = 0;
+    let mut total_ties = 0;
+    for thread in threads {
+        let (wins, losses, ties) = thread.join().unwrap();
+        total_wins += wins;
+        total_losses += losses;
+        total_ties += ties;
+    }
+
+    report_results(total_wins, total_losses, total_ties);
 }
 
 /// Simulate the specified number of attacks.
