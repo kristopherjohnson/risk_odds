@@ -49,7 +49,7 @@ fn main() {
 ///
 /// Returns a tuple `(wins, losses, ties)`.
 fn simulate_attacks(count: i32) -> (i32, i32, i32) {
-    let mut die = Die::new();
+    let mut die = Die::default();
 
     let mut wins = 0;
     let mut losses = 0;

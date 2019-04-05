@@ -12,17 +12,18 @@ pub struct Die {
 }
 
 impl Die {
-    /// Construct a six-sided die
-    pub fn new() -> Die {
+    /// Roll the die, providing a result between 1 and 6
+    pub fn roll(&mut self) -> i32 {
+        self.dist.sample(&mut self.rng)
+    }
+}
+
+impl Default for Die {
+    fn default() -> Die {
         Die {
             dist: Uniform::from(1..7),
             rng: rand::thread_rng(),
         }
-    }
-
-    /// Roll the die, providing a result between 1 and 6
-    pub fn roll(&mut self) -> i32 {
-        self.dist.sample(&mut self.rng)
     }
 }
 
@@ -68,14 +69,7 @@ impl Attack {
     ///
     /// This method is used for tests of the scoring function.
     pub fn with_die_rolls(a1: i32, a2: i32, a3: i32, d1: i32, d2: i32) -> Attack {
-        Attack {
-            a1: a1,
-            a2: a2,
-            a3: a3,
-
-            d1: d1,
-            d2: d2,
-        }
+        Attack { a1, a2, a3, d1, d2 }
     }
 
     /// Get the two largest attacker dice.
@@ -94,8 +88,7 @@ impl Attack {
         if a3 > high {
             next = high;
             high = a3;
-        }
-        else if a3 > next {
+        } else if a3 > next {
             next = a3;
         }
 
@@ -148,7 +141,7 @@ impl Attack {
 
 /// Given numerator and denominator, calculate percentage.
 pub fn percentage(numerator: i32, denominator: i32) -> f64 {
-    100.0 * (numerator as f64) / (denominator as f64)
+    100.0 * f64::from(numerator) / f64::from(denominator)
 }
 
 #[cfg(test)]
