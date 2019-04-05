@@ -3,6 +3,8 @@ extern crate rand;
 use rand::distributions::Uniform;
 use rand::prelude::*;
 
+use std::mem;
+
 /// A six-sided die
 pub struct Die {
     dist: Uniform<i32>,
@@ -82,9 +84,22 @@ impl Attack {
     /// die value, and the second element is the
     /// next largest.
     pub fn attacker_largest(&self) -> (i32, i32) {
-        let mut rolls = [self.a1, self.a2, self.a3];
-        rolls.sort();
-        (rolls[2], rolls[1])
+        let mut high = self.a1;
+        let mut next = self.a2;
+        if next > high {
+            mem::swap(&mut high, &mut next);
+        }
+
+        let a3 = self.a3;
+        if a3 > high {
+            next = high;
+            high = a3;
+        }
+        else if a3 > next {
+            next = a3;
+        }
+
+        (high, next)
     }
 
     /// Get the defender's die rolls in (largest, smallest) order.
