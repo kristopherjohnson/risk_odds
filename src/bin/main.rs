@@ -12,7 +12,7 @@ use std::thread;
 /// - number of attack rolls to simulate (default 100 million)
 /// - number of threads (default 1)
 fn main() {
-    let mut attack_count = 100_000_000;
+    let mut attack_count: i64 = 100_000_000;
     let mut thread_count = 1;
 
     // Read command-line arguments
@@ -48,7 +48,7 @@ fn main() {
 /// Simulate the specified number of attacks.
 ///
 /// Returns a tuple `(wins, losses, ties)`.
-fn simulate_attacks(count: i32) -> (i32, i32, i32) {
+fn simulate_attacks(count: i64) -> (i64, i64, i64) {
     let mut die = Die::default();
 
     let mut wins = 0;
@@ -67,7 +67,7 @@ fn simulate_attacks(count: i32) -> (i32, i32, i32) {
 }
 
 /// Print the results of a series of attacks.
-fn report_results(wins: i32, losses: i32, ties: i32) {
+fn report_results(wins: i64, losses: i64, ties: i64) {
     let total = wins + losses + ties;
 
     println!(

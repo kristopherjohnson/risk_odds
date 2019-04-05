@@ -140,8 +140,8 @@ impl Attack {
 }
 
 /// Given numerator and denominator, calculate percentage.
-pub fn percentage(numerator: i32, denominator: i32) -> f64 {
-    100.0 * f64::from(numerator) / f64::from(denominator)
+pub fn percentage(numerator: i64, denominator: i64) -> f64 {
+    100.0 * numerator as f64 / denominator as f64
 }
 
 #[cfg(test)]
@@ -150,7 +150,7 @@ mod test {
 
     #[test]
     fn die_roll() {
-        let mut die = Die::new();
+        let mut die = Die::default();
 
         for _ in 1..1000 {
             let roll = die.roll();
