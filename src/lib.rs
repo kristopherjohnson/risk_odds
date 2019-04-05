@@ -3,8 +3,6 @@ extern crate rand;
 use rand::distributions::Uniform;
 use rand::prelude::*;
 
-use std::mem;
-
 /// A six-sided die
 pub struct Die {
     dist: Uniform<i32>,
@@ -81,18 +79,19 @@ impl Attack {
         let mut high = self.a1;
         let mut next = self.a2;
         if next > high {
-            mem::swap(&mut high, &mut next);
+            let temp = high;
+            high = next;
+            next = temp;
         }
 
         let a3 = self.a3;
         if a3 > high {
-            next = high;
-            high = a3;
+            (a3, high)
         } else if a3 > next {
-            next = a3;
+            (high, a3)
+        } else {
+            (high, next)
         }
-
-        (high, next)
     }
 
     /// Get the defender's die rolls in (largest, smallest) order.
