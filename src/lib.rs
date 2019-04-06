@@ -76,30 +76,34 @@ impl Attack {
     /// die value, and the second element is the
     /// next largest.
     pub fn attacker_largest(&self) -> (i32, i32) {
-        let mut high = self.a1;
-        let mut next = self.a2;
-        if next > high {
-            let temp = high;
-            high = next;
-            next = temp;
-        }
-
+        let a1 = self.a1;
+        let a2 = self.a2;
         let a3 = self.a3;
-        if a3 > high {
-            (a3, high)
-        } else if a3 > next {
-            (high, a3)
+        if a1 > a2 {
+            if a3 > a1 {
+                (a3, a1)
+            } else if a3 > a2 {
+                (a1, a3)
+            } else {
+                (a1, a2)
+            }
+        } else if a3 > a2 {
+            (a3, a2)
+        } else if a3 > a1 {
+            (a2, a3)
         } else {
-            (high, next)
+            (a2, a1)
         }
     }
 
     /// Get the defender's die rolls in (largest, smallest) order.
     pub fn defender_largest(&self) -> (i32, i32) {
-        if self.d1 > self.d2 {
-            (self.d1, self.d2)
+        let d1 = self.d1;
+        let d2 = self.d2;
+        if d1 > d2 {
+            (d1, d2)
         } else {
-            (self.d2, self.d1)
+            (d2, d1)
         }
     }
 
