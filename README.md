@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/kristopherjohnson/risk_odds.svg?branch=master)](https://travis-ci.org/kristopherjohnson/risk_odds)
+
 risk_odds
 =========
 
