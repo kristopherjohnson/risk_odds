@@ -3,7 +3,11 @@ extern crate risk_odds;
 use risk_odds::{percentage, Attack, Die, Score};
 
 use std::env;
+use std::process;
 use std::thread;
+
+const DEFAULT_ATTACK_COUNT: i64 = 100_000_000;
+const DEFAULT_THREAD_COUNT: i32 = 1;
 
 /// Program entry point
 ///
@@ -12,18 +16,48 @@ use std::thread;
 /// - number of attack rolls to simulate (default 100 million)
 /// - number of threads (default 1)
 fn main() {
-    let mut attack_count: i64 = 100_000_000;
-    let mut thread_count = 1;
-
-    // Read command-line arguments
-    let args: Vec<String> = env::args().collect();
-    if args.len() >= 2 {
-        attack_count = args[1].parse().unwrap();
-    }
-    if args.len() >= 3 {
-        thread_count = args[2].parse().unwrap();
+    let args = env::args().collect::<Vec<String>>();
+    if args.len() > 3 {
+        print_help_and_exit(&args[0]);
     }
 
+    let attack_count = if args.len() >= 2 {
+        match args[1].parse() {
+            Ok(n) => n,
+            Err(_) => {
+                eprintln!("error: invalid attack-count argument \"{}\"", args[1]);
+                print_help_and_exit(&args[0]);
+            }
+        }
+    } else {
+        DEFAULT_ATTACK_COUNT
+    };
+
+    let thread_count = if args.len() >= 3 {
+        match args[2].parse() {
+            Ok(n) => n,
+            Err(_) => {
+                eprintln!("error: invalid thread-count argument \"{}\"", args[2]);
+                print_help_and_exit(&args[0]);
+            }
+        }
+    } else {
+        DEFAULT_THREAD_COUNT
+    };
+
+    simulate_and_report(attack_count, thread_count);
+}
+
+/// Print usage message and exit with failure code.
+fn print_help_and_exit(program_name: &str) -> ! {
+    eprintln!("usage: {} [[ATTACKS] THREADS]", program_name);
+    eprintln!("  Default attack count is {}.", DEFAULT_ATTACK_COUNT);
+    eprintln!("  Default thread count is {}.", DEFAULT_THREAD_COUNT);
+    process::exit(-1)
+}
+
+/// Simulate the attacks and report the results.
+fn simulate_and_report(attack_count: i64, thread_count: i32) {
     // Spawn threads
     let mut threads = Vec::new();
     for _ in 0..thread_count {

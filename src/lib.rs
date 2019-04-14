@@ -19,7 +19,7 @@ impl Die {
 impl Default for Die {
     fn default() -> Die {
         Die {
-            dist: Uniform::from(1..7),
+            dist: Uniform::from(1..=6),
             rng: rand::thread_rng(),
         }
     }
