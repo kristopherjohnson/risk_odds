@@ -4,6 +4,7 @@ use risk_odds::{percentage, Attack, Die, Score};
 
 use std::env;
 use std::process;
+use std::str;
 use std::thread;
 
 const DEFAULT_ATTACK_COUNT: i64 = 100_000_000;
@@ -21,31 +22,12 @@ fn main() {
         print_help_and_exit(&args[0]);
     }
 
-    let attack_count = if args.len() >= 2 {
-        match args[1].parse() {
-            Ok(n) => n,
-            Err(_) => {
-                eprintln!("error: invalid attack-count argument \"{}\"", args[1]);
-                print_help_and_exit(&args[0]);
-            }
-        }
-    } else {
-        DEFAULT_ATTACK_COUNT
-    };
+    let attack_count = arg_value("attack-count", &args, 1, DEFAULT_ATTACK_COUNT);
+    let thread_count = arg_value("thread-count", &args, 2, DEFAULT_THREAD_COUNT);
 
-    let thread_count = if args.len() >= 3 {
-        match args[2].parse() {
-            Ok(n) => n,
-            Err(_) => {
-                eprintln!("error: invalid thread-count argument \"{}\"", args[2]);
-                print_help_and_exit(&args[0]);
-            }
-        }
-    } else {
-        DEFAULT_THREAD_COUNT
-    };
+    let (wins, losses, ties) = simulate_in_threads(attack_count, thread_count);
 
-    simulate_and_report(attack_count, thread_count);
+    report_results(wins, losses, ties);
 }
 
 /// Print usage message and exit with failure code.
@@ -56,27 +38,50 @@ fn print_help_and_exit(program_name: &str) -> ! {
     process::exit(-1)
 }
 
-/// Simulate the attacks and report the results.
-fn simulate_and_report(attack_count: i64, thread_count: i32) {
+/// Get the specified argument value from the command-line arguments array.
+///
+/// If array is too short, return the specified default value.
+///
+/// If argument value cannot be parsed, print an error message and call
+/// `print_help_and_exit()`.
+fn arg_value<T>(arg_name: &str, args: &[String], arg_index: usize, default: T) -> T
+where
+    T: str::FromStr,
+{
+    if args.len() > arg_index {
+        match args[arg_index].parse() {
+            Ok(n) => n,
+            Err(_) => {
+                eprintln!(
+                    "error: invalid {} argument value \"{}\"",
+                    arg_name, args[arg_index]
+                );
+                print_help_and_exit(&args[0]);
+            }
+        }
+    } else {
+        default
+    }
+}
+
+/// Simulate the attacks by spawning threads and gathering results.
+///
+/// Returns a tuple `(wins, losses, ties)`.
+fn simulate_in_threads(attack_count: i64, thread_count: i32) -> (i64, i64, i64) {
     // Spawn threads
-    let mut threads = Vec::new();
+    let mut threads = vec![];
     for _ in 0..thread_count {
         let count = attack_count;
         threads.push(thread::spawn(move || simulate_attacks(count)));
     }
 
     // Gather thread results
-    let mut total_wins = 0;
-    let mut total_losses = 0;
-    let mut total_ties = 0;
-    for thread in threads {
-        let (wins, losses, ties) = thread.join().unwrap();
-        total_wins += wins;
-        total_losses += losses;
-        total_ties += ties;
-    }
-
-    report_results(total_wins, total_losses, total_ties);
+    threads.into_iter().map(|t| t.join().unwrap()).fold(
+        (0, 0, 0),
+        |(acc_wins, acc_losses, acc_ties), (wins, losses, ties)| {
+            (acc_wins + wins, acc_losses + losses, acc_ties + ties)
+        },
+    )
 }
 
 /// Simulate the specified number of attacks.
