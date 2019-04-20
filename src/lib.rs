@@ -3,6 +3,8 @@ extern crate rand;
 use rand::distributions::Uniform;
 use rand::prelude::*;
 
+use std::thread;
+
 /// A six-sided die
 pub struct Die {
     dist: Uniform<i32>,
@@ -142,6 +144,49 @@ impl Attack {
     }
 }
 
+/// Simulate the attacks by spawning threads and gathering results.
+///
+/// The total number of simulated attacks is `attack_count * thread_count`.
+///
+/// Returns a tuple `(wins, losses, ties)`.
+pub fn simulate_in_threads(attack_count: i64, thread_count: i32) -> (i64, i64, i64) {
+    // Spawn threads
+    let mut threads = vec![];
+    for _ in 0..thread_count {
+        let count = attack_count;
+        threads.push(thread::spawn(move || simulate_attacks(count)));
+    }
+
+    // Gather thread results
+    threads.into_iter().map(|t| t.join().unwrap()).fold(
+        (0, 0, 0),
+        |(acc_wins, acc_losses, acc_ties), (wins, losses, ties)| {
+            (acc_wins + wins, acc_losses + losses, acc_ties + ties)
+        },
+    )
+}
+
+/// Simulate the specified number of attacks.
+///
+/// Returns a tuple `(wins, losses, ties)`.
+pub fn simulate_attacks(count: i64) -> (i64, i64, i64) {
+    let mut die = Die::default();
+
+    let mut wins = 0;
+    let mut losses = 0;
+    let mut ties = 0;
+
+    for _ in 0..count {
+        match Attack::with_die(&mut die).attacker_score() {
+            Score::Win => wins += 1,
+            Score::Loss => losses += 1,
+            Score::Tie => ties += 1,
+        }
+    }
+
+    (wins, losses, ties)
+}
+
 /// Given numerator and denominator, calculate percentage.
 pub fn percentage(numerator: i64, denominator: i64) -> f64 {
     100.0 * numerator as f64 / denominator as f64
@@ -178,5 +223,24 @@ mod test {
         assert_eq!(roll.attacker_largest(), (5, 4));
         assert_eq!(roll.defender_largest(), (6, 3));
         assert_eq!(roll.attacker_score(), Score::Tie);
+    }
+
+    #[test]
+    fn test_simulate_threads() {
+        let attacks = 500;
+        let threads = 4;
+
+        let (wins, losses, ties) = simulate_in_threads(attacks, threads);
+
+        assert!(wins > 0);
+        assert!(losses > 0);
+        assert!(ties > 0);
+        assert_eq!(attacks * i64::from(threads), wins + losses + ties);
+
+        // These aren't guaranteed to be true, but are statistically likely.  If
+        // these fail, increasing the number of attacks or threads should
+        // increase the likelihoods.
+        assert!(wins > ties);
+        assert!(ties > losses);
     }
 }

@@ -1,11 +1,10 @@
 extern crate risk_odds;
 
-use risk_odds::{percentage, Attack, Die, Score};
+use risk_odds::{percentage, simulate_in_threads};
 
 use std::env;
 use std::process;
 use std::str;
-use std::thread;
 
 const DEFAULT_ATTACK_COUNT: i64 = 100_000_000;
 const DEFAULT_THREAD_COUNT: i32 = 1;
@@ -44,65 +43,18 @@ fn print_help_and_exit(program_name: &str) -> ! {
 ///
 /// If argument value cannot be parsed, print an error message and call
 /// `print_help_and_exit()`.
-fn arg_value<T>(arg_name: &str, args: &[String], arg_index: usize, default: T) -> T
+fn arg_value<T>(name: &str, args: &[String], index: usize, default: T) -> T
 where
     T: str::FromStr,
 {
-    if args.len() > arg_index {
-        match args[arg_index].parse() {
-            Ok(n) => n,
-            Err(_) => {
-                eprintln!(
-                    "error: invalid {} argument value \"{}\"",
-                    arg_name, args[arg_index]
-                );
-                print_help_and_exit(&args[0]);
-            }
-        }
+    if args.len() > index {
+        args[index].parse().unwrap_or_else(|_| {
+            eprintln!("error: invalid {} argument value \"{}\"", name, args[index]);
+            print_help_and_exit(&args[0]);
+        })
     } else {
         default
     }
-}
-
-/// Simulate the attacks by spawning threads and gathering results.
-///
-/// Returns a tuple `(wins, losses, ties)`.
-fn simulate_in_threads(attack_count: i64, thread_count: i32) -> (i64, i64, i64) {
-    // Spawn threads
-    let mut threads = vec![];
-    for _ in 0..thread_count {
-        let count = attack_count;
-        threads.push(thread::spawn(move || simulate_attacks(count)));
-    }
-
-    // Gather thread results
-    threads.into_iter().map(|t| t.join().unwrap()).fold(
-        (0, 0, 0),
-        |(acc_wins, acc_losses, acc_ties), (wins, losses, ties)| {
-            (acc_wins + wins, acc_losses + losses, acc_ties + ties)
-        },
-    )
-}
-
-/// Simulate the specified number of attacks.
-///
-/// Returns a tuple `(wins, losses, ties)`.
-fn simulate_attacks(count: i64) -> (i64, i64, i64) {
-    let mut die = Die::default();
-
-    let mut wins = 0;
-    let mut losses = 0;
-    let mut ties = 0;
-
-    for _ in 0..count {
-        match Attack::with_die(&mut die).attacker_score() {
-            Score::Win => wins += 1,
-            Score::Loss => losses += 1,
-            Score::Tie => ties += 1,
-        }
-    }
-
-    (wins, losses, ties)
 }
 
 /// Print the results of a series of attacks.
