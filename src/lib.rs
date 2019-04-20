@@ -227,19 +227,28 @@ mod test {
 
     #[test]
     fn test_simulate_threads() {
-        let attacks = 500;
+        let attacks = 1000;
         let threads = 4;
 
         let (wins, losses, ties) = simulate_in_threads(attacks, threads);
 
+        let expected_total = attacks * i64::from(threads);
+        assert_eq!(expected_total, wins + losses + ties);
+
+        // The following assertions aren't guaranteed to be true, but are
+        // statistically likely.  If these fail, increasing the number of
+        // attacks or threads should increase the likelihoods.
+        //
+        // The expected results are approximately:
+        //
+        // - wins: 37%
+        // - losses: 29%
+        // - ties: 34%
+
         assert!(wins > 0);
         assert!(losses > 0);
         assert!(ties > 0);
-        assert_eq!(attacks * i64::from(threads), wins + losses + ties);
 
-        // These aren't guaranteed to be true, but are statistically likely.  If
-        // these fail, increasing the number of attacks or threads should
-        // increase the likelihoods.
         assert!(wins > ties);
         assert!(ties > losses);
     }
