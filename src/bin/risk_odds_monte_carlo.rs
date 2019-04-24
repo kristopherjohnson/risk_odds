@@ -6,15 +6,15 @@ use std::env;
 use std::process;
 use std::str;
 
-const DEFAULT_ATTACK_COUNT: i64 = 100_000_000;
-const DEFAULT_THREAD_COUNT: i32 = 1;
+const DEFAULT_ATTACK_COUNT: i64 = 25_000_000;
+const DEFAULT_THREAD_COUNT: i32 = 4;
 
 /// Program entry point
 ///
 /// Takes two optional command-line parameters:
 ///
-/// - number of attack rolls to simulate (default 100 million)
-/// - number of threads (default 1)
+/// - number of attack rolls to simulate per thread (default 25 million)
+/// - number of threads (default 4)
 fn main() {
     let args = env::args().collect::<Vec<String>>();
     if args.len() > 3 {
